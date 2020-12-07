@@ -1,0 +1,54 @@
+OUTDIR : '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/trimap2.0'
+N_EPOCH : 70
+MAX_ITER : 100000
+RESUME : 29
+TRAIN_FOCUS: 0
+PRETRAINED : '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/trimap2.0/resnet101-5d3b4d8f.pth'
+# ---------------------------------------------------------
+DATASET:
+# ---------------------------------------------------------
+  TRAIN        : '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/train'
+  VAL          : '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/val'
+  N_CLASS      : 11
+  BATCHSIZE    : 4
+  IMGSIZE      : (512, 512)
+  AUGMENTATION : []
+
+# ---------------------------------------------------------
+MODEL:
+# ---------------------------------------------------------
+  BACKBONE                   : 'resnet101'
+  GLOBAL_DECODER             : 'PPM'
+  FOCUS_DECODER              : True
+  FPN                        : True
+  FPN_OUT                    : 1024
+  PPM_IN                     : 1024
+  N_CLASS                    : 11
+  # The output channel of backbone
+  FC_DIM                     : (256, 512, 1024, 2048)
+  # The adaptive pooling scale of Payramid Pooling Module
+  POOL_SCALES                : (1, 2, 3, 6)
+  SEGSIZE                    : (1024, 1024)
+  EROSION_DILATION_KERNAL    : 11
+
+# ---------------------------------------------------------
+LOSS:
+# ---------------------------------------------------------
+  TYPE            : 'MixLoss'
+  IGNORE_INDEX    : -1
+  LOSS_WEIGHT     : (1, 1)
+  CLASS_WEIGHT    : None
+  # The threshold probability in OHEM loss, a pixel will be use when probability less than THRESHOLD
+  THRESHOLD       : 0.7
+  # minimum number of pixel using in OHEM loss
+  MIN_KEPT        : 100000
+
+# ---------------------------------------------------------
+OPTIMIZER:
+# ---------------------------------------------------------
+  TYPE           : 'SGD'
+  LR             : 0.0001
+  BETA1          : 0.9
+  BETA2          : 0.999
+  WEIGHT_DECAY   : 1e-5
+  LR_SCHEDULER   : 'poly'
