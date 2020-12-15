@@ -1,4 +1,5 @@
 import os
+import torch
 import logging
 import numpy as np
 
@@ -63,6 +64,22 @@ class AverageTracker:
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
+
+def label2onehot(label, n_class):
+    label = label.unsqueeze(dim=1)
+    onehot = torch.zeros((label.size()[0], n_class, label.size()[2], label.size()[3])).cuda().scatter_(1, label, 1)
+    return onehot
+
+
+def noise_onehot_label(label, n_class, threshold):
+    label = label.unsqueeze(dim=1)
+    onehot = torch.zeros((label.size()[0], n_class, label.size()[2], label.size()[3])).cuda().scatter_(1, label, 1)
+    size = onehot.size()
+    noise = threshold*torch.rand(size).cuda()
+    noise = torch.where(onehot == 0, noise, -noise)
+    noise_onehot = onehot + noise
+    return noise_onehot
 
 
 COLOR_TABLE = [

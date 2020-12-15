@@ -10,7 +10,7 @@ class build_model(nn.Module):
     def __init__(self, cfg):
         super(build_model, self).__init__()
         self.cfg = cfg
-        self.backbone = self.build_backbone(cfg.MODEL.BACKBONE, cfg.PRETRAINED)
+        self.backbone = self.build_backbone(cfg.MODEL.BACKBONE, cfg.PRETRAINED, cfg.GAN.LEAKYRELU)
         self.global_decoder = self.build_global_decoder(cfg.MODEL.GLOBAL_DECODER)
         if self.cfg.MODEL.FPN:
             self.FPN = FPN(in_channels_list=cfg.MODEL.FC_DIM,
@@ -26,25 +26,21 @@ class build_model(nn.Module):
         global_pred = self.global_decoder(features, self.cfg.MODEL.SEGSIZE)
         if self.cfg.MODEL.FOCUS_DECODER and epoch_i >= self.cfg.TRAIN_FOCUS:
             fusion_pred = self.focus_decoder(features, global_pred)
-            if self.training:
-                return global_pred, fusion_pred
             return F.interpolate(fusion_pred, size=self.cfg.MODEL.SEGSIZE, mode='bilinear', align_corners=False)
         else:
-            if self.training:
-                return global_pred
             return F.interpolate(global_pred, size=self.cfg.MODEL.SEGSIZE, mode='bilinear', align_corners=False)
 
-    def build_backbone(self, backbone, pretrained=None):
+    def build_backbone(self, backbone, pretrained=None, leakyrelu=0.0):
         if backbone == 'resnet18':
-            backbone = resnet18()
+            backbone = resnet18(leakyrelu=leakyrelu)
         elif backbone == 'resnet34':
-            backbone = resnet34()
+            backbone = resnet34(leakyrelu=leakyrelu)
         elif backbone == 'resnet50':
-            backbone = resnet50()
+            backbone = resnet50(leakyrelu=leakyrelu)
         elif backbone == 'resnet101':
-            backbone = resnet101()
+            backbone = resnet101(leakyrelu=leakyrelu)
         elif backbone == 'resnet152':
-            backbone = resnet152()
+            backbone = resnet152(leakyrelu=leakyrelu)
         elif backbone == 'HRNet':
             backbone = HRNetV2(self.cfg.MODEL.N_CLASS)
         else:
@@ -55,8 +51,8 @@ class build_model(nn.Module):
             model_dict = backbone.state_dict()
             pretrained_dict = {}
             for k, v in pre_weight.items():
-                if k[6:] in model_dict.keys():
-                    pretrained_dict[k[6:]] = v
+                if k in model_dict.keys():
+                    pretrained_dict[k] = v
             model_dict.update(pretrained_dict)
             backbone.load_state_dict(model_dict)
 
@@ -67,7 +63,8 @@ class build_model(nn.Module):
             global_decoder = PPM(n_class=self.cfg.MODEL.N_CLASS,
                                  fc_dim=self.cfg.MODEL.PPM_IN,
                                  pool_scales=self.cfg.MODEL.POOL_SCALES,
-                                 segSize=self.cfg.MODEL.SEGSIZE)
+                                 segSize=self.cfg.MODEL.SEGSIZE,
+                                 leakyrelu=self.cfg.GAN.LEAKYRELU)
         else:
             raise Exception("Global Decoder No Found.")
         return global_decoder

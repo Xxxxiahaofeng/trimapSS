@@ -58,17 +58,21 @@ class FPN(nn.Module):
 
 
 class PPM(nn.Module):
-    def __init__(self, n_class=150, fc_dim=2048, pool_scales=(1, 2, 3, 6), segSize=None):
+    def __init__(self, n_class=150, fc_dim=2048, pool_scales=(1, 2, 3, 6), segSize=None, leakyrelu=0.2):
         super(PPM, self).__init__()
         self.segSize = segSize
         # self.decoder_out_size = decoder_out_size
+        if leakyrelu != 0.0:
+            self.relu = nn.LeakyReLU(leakyrelu, inplace=True)
+        else:
+            self.relu = nn.ReLU(inplace=True)
         self.ppm = []
         for scale in pool_scales:
             self.ppm.append(nn.Sequential(
                 nn.AdaptiveAvgPool2d(scale),
                 nn.Conv2d(fc_dim, 512, kernel_size=1, bias=False),
                 nn.BatchNorm2d(512),
-                nn.ReLU(inplace=True)
+                self.relu
             ))
         self.ppm = nn.ModuleList(self.ppm)
 
@@ -76,7 +80,7 @@ class PPM(nn.Module):
             nn.Conv2d(fc_dim+len(pool_scales)*512, 512,
                       kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True),
+            self.relu,
             nn.Dropout2d(0.1),
             nn.Conv2d(512, n_class, kernel_size=1)
         )

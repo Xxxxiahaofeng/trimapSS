@@ -1,9 +1,9 @@
-OUTDIR : '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/trimap2.0/hrnet_ppm_focus'
-N_EPOCH : 70
-MAX_ITER : 100000
+OUTDIR : '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/trimap2.0/resnet_GAN_focus'
+N_EPOCH : 200
+MAX_ITER : 1000000
 TRAIN_FOCUS : 0
 RESUME : -1
-PRETRAINED : '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/trimap2.0/hrnet_w48_cityscapes_cls19_1024x2048_ohem_trainvalset.pth'
+PRETRAINED : '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/trimap2.0/pretrained/resnet50-19c8e357.pth'
 # ---------------------------------------------------------
 DATASET:
 # ---------------------------------------------------------
@@ -17,17 +17,17 @@ DATASET:
 # ---------------------------------------------------------
 MODEL:
 # ---------------------------------------------------------
-  BACKBONE                   : 'HRNet'
+  BACKBONE                   : 'resnet50'
   GLOBAL_DECODER             : 'PPM'
-  FOCUS_DECODER              : True
-  FPN                        : False
+  FOCUS_DECODER              : False
+  FPN                        : True
   N_CLASS                    : 11
-  PPM_IN                     : 720
+  PPM_IN                     : 1024
   # The output channel of backbone
-  FC_DIM                     : [720]
+  FC_DIM                     : (256, 512, 1024, 2048)
   # The adaptive pooling scale of Payramid Pooling Module
   POOL_SCALES                : (1, 2, 3, 6)
-  SEGSIZE                    : (1024, 1024)
+  SEGSIZE                    : (512, 512)
   EROSION_DILATION_KERNAL    : 11
 
 # ---------------------------------------------------------
@@ -35,7 +35,7 @@ LOSS:
 # ---------------------------------------------------------
   TYPE            : 'CrossEntropy'
   IGNORE_INDEX    : -1
-  LOSS_WEIGHT     : (1, 1)
+  LOSS_WEIGHT     : (1, 0.5)
   CLASS_WEIGHT    : None
   # The threshold probability in OHEM loss, a pixel will be use when probability less than THRESHOLD
   THRESHOLD       : 0.7
@@ -45,12 +45,21 @@ LOSS:
 # ---------------------------------------------------------
 OPTIMIZER:
 # ---------------------------------------------------------
-  TYPE           : 'SGD'
+  TYPE           : 'Adam'
   LR             : 0.0001
   BETA1          : 0.9
   BETA2          : 0.999
   WEIGHT_DECAY   : 1e-5
-  LR_SCHEDULER   : 'poly'
+  LR_SCHEDULER   : ''
+
+# ---------------------------------------------------------
+# GAN
+# ---------------------------------------------------------
+GAN:
+  G_LR         : 0.00004
+  D_LR         : 0.00001
+  THRESHOLD    : 0.2
+  LEAKYRELU    : 0.2
 
 # ---------------------------------------------------------
 TEST:

@@ -1,6 +1,8 @@
 import torch
+import random
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
 
 
 class MixLoss(nn.Module):
@@ -79,11 +81,32 @@ class CELoss(nn.Module):
         self.fusion_loss = nn.CrossEntropyLoss(weight=class_weight, ignore_index=ignore_index)
 
     def forward(self, pred, target, epoch_i):
-        fusion_pred = pred[-1]
-
+        fusion_pred = pred
         fusion_pred = F.interpolate(fusion_pred, size=target.shape[-2:], mode='bilinear', align_corners=False)
         fusion_loss = self.fusion_loss(fusion_pred, target)
         return fusion_loss
+
+
+class GANLoss(nn.Module):
+    def __init__(self, cfg):
+        super(GANLoss, self).__init__()
+        self.threshold = cfg.GAN.THRESHOLD
+        self.batch_size = cfg.DATASET.BATCHSIZE
+        self.weight = cfg.LOSS.LOSS_WEIGHT
+        self.discriminator_loss = nn.BCELoss()
+
+    def forward(self, score_fake, score_real=None):
+        real = torch.FloatTensor(self.batch_size, 1).fill_(1).cuda()
+        soft_real = torch.FloatTensor(self.batch_size, 1).fill_(random.uniform(1-self.threshold, 1)).cuda()
+        fake = torch.FloatTensor(self.batch_size, 1).fill_(random.uniform(0, 0+self.threshold)).cuda()
+
+        if score_real is None:
+            loss = self.discriminator_loss(score_fake, real)
+        else:
+            loss_fake = self.discriminator_loss(score_fake, fake)
+            loss_real = self.discriminator_loss(score_real, soft_real)
+            loss = (loss_fake + loss_real) / 2
+        return loss
 
 
 def build_criterion(cfg):

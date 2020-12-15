@@ -66,11 +66,23 @@ _C.OPTIMIZER.WEIGHT_DECAY   = 1e-5
 _C.OPTIMIZER.LR_SCHEDULER   = 'poly'
 
 # ---------------------------------------------------------
+# GAN
+# ---------------------------------------------------------
+_C.GAN = CN()
+_C.GAN.G_LR         = 0.00004
+_C.GAN.D_LR         = 0.00001
+# The threshold of the noise for ground truth label image and score when training discriminator
+_C.GAN.THRESHOLD    = 0.1
+_C.GAN.LEAKYRELU    = 0.0
+# The times of training discriminator in a iteration
+_C.GAN.D_ITER       = 1
+
+# ---------------------------------------------------------
 # TEST
 # ---------------------------------------------------------
 _C.TEST = CN()
-_C.TEST.TESTIMAGE = '/media/xiehaofeng/新加卷/things/EvLab-SSBenchmark/val/38.tif'
-_C.TEST.CHECKPOINT = '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/trimap2.0/checkpoints/69epoch.pth'
-_C.TEST.PATCHSIZE = 1024
-_C.TEST.OVERLAP = 0.5
-_C.TEST.OUTDIR = '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/trimap2.0/38.tif'
+_C.TEST.TESTIMAGE   = '/media/xiehaofeng/新加卷/things/EvLab-SSBenchmark/val/38.tif'
+_C.TEST.CHECKPOINT  = '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/trimap2.0/checkpoints/69epoch.pth'
+_C.TEST.PATCHSIZE   = 1024
+_C.TEST.OVERLAP     = 0.5
+_C.TEST.OUTDIR      = '/media/xiehaofeng/新加卷/things/evlab-benchmark-segfix/trimap2.0/38.tif'
