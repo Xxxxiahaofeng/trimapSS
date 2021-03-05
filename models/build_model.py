@@ -22,12 +22,17 @@ class build_model(nn.Module):
         features = self.backbone(image)
         if self.cfg.MODEL.FPN:
             features = self.FPN(features)
+        elif 'UNet' in self.cfg.MODEL.BACKBONE:
+            features = F.softmax(features, dim=1)
+            return F.interpolate(features, size=self.cfg.MODEL.SEGSIZE, mode='bilinear', align_corners=False)
 
         global_pred = self.global_decoder(features, self.cfg.MODEL.SEGSIZE)
         if self.cfg.MODEL.FOCUS_DECODER and epoch_i >= self.cfg.TRAIN_FOCUS:
             fusion_pred = self.focus_decoder(features, global_pred)
+            fusion_pred = F.softmax(fusion_pred, dim=1)
             return F.interpolate(fusion_pred, size=self.cfg.MODEL.SEGSIZE, mode='bilinear', align_corners=False)
         else:
+            global_pred = F.softmax(global_pred, dim=1)
             return F.interpolate(global_pred, size=self.cfg.MODEL.SEGSIZE, mode='bilinear', align_corners=False)
 
     def build_backbone(self, backbone, pretrained=None, leakyrelu=0.0):
@@ -43,6 +48,14 @@ class build_model(nn.Module):
             backbone = resnet152(leakyrelu=leakyrelu)
         elif backbone == 'HRNet':
             backbone = HRNetV2(self.cfg.MODEL.N_CLASS)
+        elif backbone == 'UNet128':
+            backbone = Unet(3, self.cfg.MODEL.N_CLASS, 7, 64,
+                            norm_layer=self.cfg.MODEL.NORM_LAYER,
+                            use_dropout=self.cfg.MODEL.DROPOUT)
+        elif backbone == 'UNet256':
+            backbone = Unet(3, self.cfg.MODEL.N_CLASS, 8, 64,
+                            norm_layer=self.cfg.MODEL.NORM_LAYER,
+                            use_dropout=self.cfg.MODEL.DROPOUT)
         else:
             raise Exception("Backbone no found.")
 

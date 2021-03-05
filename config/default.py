@@ -40,6 +40,10 @@ _C.MODEL.POOL_SCALES                = (1, 2, 3, 6)
 _C.MODEL.SEGSIZE                    = (512, 512)
 # size of erosion and dilation kernal
 _C.MODEL.EROSION_DILATION_KERNAL    = 11
+# use instance norm or batch norm in unet
+_C.MODEL.NORM_LAYER                 = 'instance'
+# if use dropout in unet
+_C.MODEL.DROPOUT                    = False
 
 # ---------------------------------------------------------
 # LOSS
@@ -76,6 +80,8 @@ _C.GAN.THRESHOLD    = 0.1
 _C.GAN.LEAKYRELU    = 0.0
 # The times of training discriminator in a iteration
 _C.GAN.D_ITER       = 1
+# the type of GAN objective. It currently supports vanilla, lsgan, and wgangp.
+_C.GAN.GAN_MODE     = 'vanilla'
 
 # ---------------------------------------------------------
 # TEST

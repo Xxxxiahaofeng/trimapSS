@@ -35,7 +35,7 @@ LOSS:
 # ---------------------------------------------------------
   TYPE            : 'CrossEntropy'
   IGNORE_INDEX    : -1
-  LOSS_WEIGHT     : (1, 0.5)
+  LOSS_WEIGHT     : (1, 1)
   CLASS_WEIGHT    : None
   # The threshold probability in OHEM loss, a pixel will be use when probability less than THRESHOLD
   THRESHOLD       : 0.7
@@ -58,7 +58,7 @@ OPTIMIZER:
 GAN:
   G_LR         : 0.00004
   D_LR         : 0.00001
-  THRESHOLD    : 0.2
+  THRESHOLD    : 0.85
   LEAKYRELU    : 0.2
 
 # ---------------------------------------------------------

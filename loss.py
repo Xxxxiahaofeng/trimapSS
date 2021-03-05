@@ -87,25 +87,94 @@ class CELoss(nn.Module):
         return fusion_loss
 
 
+# class GANLoss(nn.Module):
+#     def __init__(self, cfg):
+#         super(GANLoss, self).__init__()
+#         self.threshold = cfg.GAN.THRESHOLD
+#         self.batch_size = cfg.DATASET.BATCHSIZE
+#         self.weight = cfg.LOSS.LOSS_WEIGHT
+#         self.discriminator_loss = nn.BCELoss()
+#
+#     def forward(self, score_fake, score_real=None):
+#         real = torch.FloatTensor(self.batch_size, 1).fill_(1).cuda()
+#         soft_real = torch.FloatTensor(self.batch_size, 1).fill_(random.uniform(1-self.threshold, 1)).cuda()
+#         fake = torch.FloatTensor(self.batch_size, 1).fill_(random.uniform(0, 0+self.threshold)).cuda()
+#
+#         if score_real is None:
+#             loss = self.discriminator_loss(score_fake, real)
+#         else:
+#             loss_fake = self.discriminator_loss(score_fake, fake)
+#             loss_real = self.discriminator_loss(score_real, soft_real)
+#             loss = (loss_fake + loss_real) / 2
+#         return loss
+
+
 class GANLoss(nn.Module):
-    def __init__(self, cfg):
+    """Define different GAN objectives.
+
+    The GANLoss class abstracts away the need to create the target label tensor
+    that has the same size as the input.
+    """
+
+    def __init__(self, gan_mode, target_real_label=1.0, target_fake_label=0.0):
+        """ Initialize the GANLoss class.
+
+        Parameters:
+            gan_mode (str) - - the type of GAN objective. It currently supports vanilla, lsgan, and wgangp.
+            target_real_label (bool) - - label for a real image
+            target_fake_label (bool) - - label of a fake image
+
+        Note: Do not use sigmoid as the last layer of Discriminator.
+        LSGAN needs no sigmoid. vanilla GANs will handle it with BCEWithLogitsLoss.
+        """
         super(GANLoss, self).__init__()
-        self.threshold = cfg.GAN.THRESHOLD
-        self.batch_size = cfg.DATASET.BATCHSIZE
-        self.weight = cfg.LOSS.LOSS_WEIGHT
-        self.discriminator_loss = nn.BCELoss()
-
-    def forward(self, score_fake, score_real=None):
-        real = torch.FloatTensor(self.batch_size, 1).fill_(1).cuda()
-        soft_real = torch.FloatTensor(self.batch_size, 1).fill_(random.uniform(1-self.threshold, 1)).cuda()
-        fake = torch.FloatTensor(self.batch_size, 1).fill_(random.uniform(0, 0+self.threshold)).cuda()
-
-        if score_real is None:
-            loss = self.discriminator_loss(score_fake, real)
+        self.register_buffer('real_label', torch.tensor(target_real_label))
+        self.register_buffer('fake_label', torch.tensor(target_fake_label))
+        self.gan_mode = gan_mode
+        if gan_mode == 'lsgan':
+            self.loss = nn.MSELoss()
+        elif gan_mode == 'vanilla':
+            self.loss = nn.BCEWithLogitsLoss()
+        elif gan_mode in ['wgangp']:
+            self.loss = None
         else:
-            loss_fake = self.discriminator_loss(score_fake, fake)
-            loss_real = self.discriminator_loss(score_real, soft_real)
-            loss = (loss_fake + loss_real) / 2
+            raise NotImplementedError('gan mode %s not implemented' % gan_mode)
+
+    def get_target_tensor(self, prediction, target_is_real):
+        """Create label tensors with the same size as the input.
+
+        Parameters:
+            prediction (tensor) - - tpyically the prediction from a discriminator
+            target_is_real (bool) - - if the ground truth label is for real images or fake images
+
+        Returns:
+            A label tensor filled with ground truth label, and with the size of the input
+        """
+
+        if target_is_real:
+            target_tensor = self.real_label
+        else:
+            target_tensor = self.fake_label
+        return target_tensor.expand_as(prediction)
+
+    def __call__(self, prediction, target_is_real):
+        """Calculate loss given Discriminator's output and grount truth labels.
+
+        Parameters:
+            prediction (tensor) - - tpyically the prediction output from a discriminator
+            target_is_real (bool) - - if the ground truth label is for real images or fake images
+
+        Returns:
+            the calculated loss.
+        """
+        if self.gan_mode in ['lsgan', 'vanilla']:
+            target_tensor = self.get_target_tensor(prediction, target_is_real)
+            loss = self.loss(prediction, target_tensor)
+        elif self.gan_mode == 'wgangp':
+            if target_is_real:
+                loss = -prediction.mean()
+            else:
+                loss = prediction.mean()
         return loss
 
 

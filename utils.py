@@ -40,7 +40,7 @@ class runningScore(object):
         F1 = 2 * acc_cls[1] * recall[1] / (acc_cls[1] + recall[1] + 1e-6)
         return {'Overall Acc: \t': acc,
                 'Class Acc: \t': acc_cls,
-                'Recall: \t': recall,
+                'Recall: \t': recall, 
                 'Class IoU: \t': cls_iu,
                 'F1 Score: \t': F1,
                 'Mean IoU: \t': mean_iu}
@@ -72,14 +72,15 @@ def label2onehot(label, n_class):
     return onehot
 
 
-def noise_onehot_label(label, n_class, threshold):
-    label = label.unsqueeze(dim=1)
-    onehot = torch.zeros((label.size()[0], n_class, label.size()[2], label.size()[3])).cuda().scatter_(1, label, 1)
-    size = onehot.size()
-    noise = threshold*torch.rand(size).cuda()
-    noise = torch.where(onehot == 0, noise, -noise)
-    noise_onehot = onehot + noise
+def noise_onehot_label(label:torch.Tensor, pred:torch.Tensor, threshold)->torch.Tensor:
+    onehot = torch.zeros_like(pred).scatter_(1, label.unsqueeze(dim=1), 1)
+    yil = torch.where(pred < threshold, torch.tensor(threshold).cuda(), pred)
+    yil = torch.where(onehot == 0, torch.tensor(0.0).cuda(), yil)
+    y, index = torch.max(yil, dim=1)
+    sxil = torch.gather(pred, dim=1, index=index.unsqueeze(1))
+    noise_onehot = torch.where(onehot == 0, pred*(1 - y.unsqueeze(1))/(1 - sxil), yil)
     return noise_onehot
+
 
 
 COLOR_TABLE = [

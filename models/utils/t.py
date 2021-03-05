@@ -1,15 +1,9 @@
-import numpy as np
 import torch
-import torch.nn as nn
+import numpy as np
 
-# input1 = torch.randn(1, 64, 1)
-# input2 = torch.randn(1, 11, 1)
-# dist = torch.cdist(input1, input2, p=2)
-# output = torch.matmul(dist, input2)
-# print(input1)
-# print(input2)
-# print(dist)
-
-for i in range(5):
-    a = torch.rand((2, 3))
-    print(a)
+labels_ = torch.from_numpy(np.random.randint(0, 10, [10,1]))
+mask = torch.eq(labels_, torch.transpose(labels_, 0, 1)).float()
+logits_mask = torch.ones_like(mask).scatter_(1,
+                                             torch.arange(10).view(-1, 1),
+                                             0)
+print(mask)
