@@ -44,6 +44,7 @@ _C.MODEL.EROSION_DILATION_KERNAL    = 11
 _C.MODEL.NORM_LAYER                 = 'instance'
 # if use dropout in unet
 _C.MODEL.DROPOUT                    = False
+_C.MODEL.RETURN_FEATURE             = False
 
 # ---------------------------------------------------------
 # LOSS
@@ -82,6 +83,17 @@ _C.GAN.LEAKYRELU    = 0.0
 _C.GAN.D_ITER       = 1
 # the type of GAN objective. It currently supports vanilla, lsgan, and wgangp.
 _C.GAN.GAN_MODE     = 'vanilla'
+
+# ---------------------------------------------------------
+# CONTRAST
+# ---------------------------------------------------------
+_C.CONTRAST = CN()
+_C.CONTRAST.TEMPERATURE = 0.07
+_C.CONTRAST.BASE_TEMPERATURE = 0.07
+_C.CONTRAST.MAX_SAMPLES = 1024
+_C.CONTRAST.MAX_VIEWS = 100
+_C.CONTRAST.LOSS_WEIGHT = 0.1
+_C.CONTRAST.QUEUE_SIZE = 512
 
 # ---------------------------------------------------------
 # TEST

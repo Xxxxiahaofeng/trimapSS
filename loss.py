@@ -195,6 +195,9 @@ def build_criterion(cfg):
     elif cfg.LOSS.TYPE == 'CrossEntropy':
         criterion = CELoss(class_weight=cfg.LOSS.CLASS_WEIGHT,
                            ignore_index=cfg.LOSS.IGNORE_INDEX)
+
+    elif cfg.LOSS.TYPE == 'Contrastive':
+        criterion = #TODO:ADD LOSS
     else:
         raise Exception("Criterion no found.")
     return criterion

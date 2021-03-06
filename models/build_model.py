@@ -27,12 +27,15 @@ class build_model(nn.Module):
             return F.interpolate(features, size=self.cfg.MODEL.SEGSIZE, mode='bilinear', align_corners=False)
 
         global_pred = self.global_decoder(features, self.cfg.MODEL.SEGSIZE)
+
         if self.cfg.MODEL.FOCUS_DECODER and epoch_i >= self.cfg.TRAIN_FOCUS:
             fusion_pred = self.focus_decoder(features, global_pred)
             fusion_pred = F.softmax(fusion_pred, dim=1)
             return F.interpolate(fusion_pred, size=self.cfg.MODEL.SEGSIZE, mode='bilinear', align_corners=False)
         else:
             global_pred = F.softmax(global_pred, dim=1)
+            if self.cfg.MODEL.RETURN_FEATURE == True:
+                return features, global_pred
             return F.interpolate(global_pred, size=self.cfg.MODEL.SEGSIZE, mode='bilinear', align_corners=False)
 
     def build_backbone(self, backbone, pretrained=None, leakyrelu=0.0):
